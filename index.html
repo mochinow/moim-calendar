@@ -4,33 +4,67 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>모임 위치 안내</title>
+
 <style>
-body{font-family:sans-serif;max-width:800px;margin:20px auto;padding:10px}
-h2{margin-top:40px}
-.card{background:#f3f3f3;padding:15px;border-radius:12px;margin-top:10px}
-input,button{padding:8px;margin-top:10px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#f5f5f5;
+  margin:0;
+  padding:20px;
+}
+.section{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:25px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+h2{margin-top:0}
+img{
+  width:100%;
+  border-radius:12px;
+  margin-top:10px;
+}
+select{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border-radius:8px;
+  margin-top:10px;
+}
+.result{
+  margin-top:15px;
+  font-weight:bold;
+}
 </style>
 </head>
+
 <body>
 
-<h1>📍 모임 위치 안내</h1>
-
-<h2>📌 모임위치</h2>
-<div class="card">
-에스랩 개포동역점 (ROOM8)<br>
-서울 강남구 개포로 508 소망빌딩 5층
+<div class="section">
+<h2>📍 모임 위치</h2>
+<p><strong>에스랩 개포동역점 (ROOM8)</strong></p>
+<p>서울 강남구 개포로 508 소망빌딩 5층</p>
 </div>
 
+<div class="section">
 <h2>🚪 입장방법</h2>
-<div class="card">
-입구 옆 키오스크에서 좌측 하단 '룸예약번호입력' 버튼을 누릅니다.<br>
-당근채팅으로 전달받은 예약번호 입력 후 확인을 누르면 종이가 출력됩니다.<br>
-그 종이를 문 옆 바코드 인식기에 대면 문이 열립니다.<br><br>
+<p>
+입구 옆 키오스크에서 좌측 하단 "룸예약확인" 버튼을 누릅니다.<br>
+성함 선택 후 확인을 누르면 종이가 출력됩니다.<br>
+종이를 문 옆 바코드 인식기에 대면 문이 열립니다.<br>
 문이 열리지 않으면 당근 채팅으로 연락 주세요.
+</p>
+
+<img src="20260211_123721.jpg">
+<img src="20260211_123727.jpg">
+<img src="20260211_123740.jpg">
+
 </div>
 
+<div class="section">
 <h2>🚗 주차안내</h2>
-<div class="card">
+<p>
 주차 가능 (유료)<br>
 최초 60분 3,600원<br>
 추가 60분당 3,600원 (최대 30,000원)<br><br>
@@ -38,38 +72,49 @@ input,button{padding:8px;margin-top:10px}
 - 개포주공 5단지 북측 노상 공영주차장<br>
 - 개포동공원 공영주차장<br>
 ※ 노상 주차장은 자리가 없을 수 있습니다.
+</p>
 </div>
 
-<h2>⚠ 주의사항</h2>
-<div class="card">
+<div class="section">
+<h2>⚠️ 주의사항</h2>
+<p>
 입장은 시작 10분 전부터 가능합니다.<br>
 너무 일찍 도착하시면 입장이 어렵습니다.<br>
 다른 분들을 위해 5~10분 전 도착 부탁드립니다.
+</p>
 </div>
 
+<div class="section">
 <h2>📅 모임일정</h2>
-<div class="card">
-<input type="date" id="datePicker">
-<div id="result" style="margin-top:15px;"></div>
+
+<select id="dateSelect" onchange="showSchedule()">
+<option value="">날짜 선택</option>
+<option value="2026-02-14-1">2026.02.14 (15:00~16:30)</option>
+<option value="2026-02-19-1">2026.02.19 (13:00~14:30)</option>
+<option value="2026-02-19-2">2026.02.19 (15:30~17:00)</option>
+</select>
+
+<div class="result" id="scheduleResult"></div>
+
 </div>
 
 <script>
-const events = [
-{date:"2026-02-14",start:"15:00",end:"16:30"},
-{date:"2026-02-19",start:"13:00",end:"14:30"},
-{date:"2026-02-19",start:"15:30",end:"17:00"}
-];
+const schedules = {
+  "2026-02-14-1": "15:00 ~ 16:30",
+  "2026-02-19-1": "13:00 ~ 14:30",
+  "2026-02-19-2": "15:30 ~ 17:00"
+};
 
-document.getElementById("datePicker").addEventListener("change",function(){
-const selected=this.value;
-const found=events.find(e=>e.date===selected);
-const result=document.getElementById("result");
-if(found){
-result.innerHTML=`${found.date}<br>${found.start} ~ ${found.end}`;
-}else{
-result.innerHTML="해당 날짜에 모임이 없습니다.";
+function showSchedule(){
+  const selected = document.getElementById("dateSelect").value;
+  const result = document.getElementById("scheduleResult");
+
+  if(schedules[selected]){
+    result.innerHTML = schedules[selected];
+  } else {
+    result.innerHTML = "해당 날짜에 모임이 없습니다.";
+  }
 }
-});
 </script>
 
 </body>
