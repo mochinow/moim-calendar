@@ -1,152 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>모임 일정 안내</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Arial; padding: 16px; max-width: 820px; margin: 0 auto; }
-    h1 { margin: 8px 0 14px; }
-    .card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 14px; margin: 12px 0; }
-    .muted { color: #666; font-size: 14px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    input[type="date"] { padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
-    a { word-break: break-all; }
-    .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; border:1px solid #ddd; font-size: 12px; }
-    .list { margin: 8px 0 0; padding: 0; list-style: none; }
-    .list li { padding: 10px 0; border-top: 1px solid #f0f0f0; }
-    .list li:first-child { border-top: none; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>모임 안내</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+}
+section {
+  margin-bottom: 30px;
+}
+h2 {
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 5px;
+}
+.card {
+  background: #f9f9f9;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+</style>
 </head>
+
 <body>
-  <h1 id="title">모임 일정 안내</h1>
-  <div class="muted">링크 하나로 일정/장소/입장/주차 안내를 확인할 수 있어요.</div>
 
-  <div class="card">
-    <div class="row">
-      <div><span class="badge">날짜 선택</span></div>
-      <input id="datePicker" type="date" />
-      <div class="muted" id="nextHint"></div>
-    </div>
-    <div style="margin-top:10px" id="selectedEvent"></div>
+<h1 id="title"></h1>
 
-    <div style="margin-top:14px">
-      <div class="muted">다가오는 일정</div>
-      <ul class="list" id="eventList"></ul>
-    </div>
-  </div>
+<section>
+  <h2>📍 모임위치</h2>
+  <div id="location"></div>
+</section>
 
-  <div class="card">
-    <h2 style="margin:0 0 10px">📍 장소 정보</h2>
-    <div id="place"></div>
-    <div style="margin-top:10px" class="muted">지도 링크</div>
-    <div><a id="mapLink" href="#" target="_blank" rel="noreferrer">지도 열기</a></div>
-  </div>
+<section>
+  <h2>🚪 입장방법</h2>
+  <div id="entry"></div>
+</section>
 
-  <div class="card">
-    <h2 style="margin:0 0 10px">🚪 입장 방법</h2>
-    <div id="entryGuide"></div>
-  </div>
+<section>
+  <h2>🚗 주차안내</h2>
+  <div id="parking"></div>
+</section>
 
-  <div class="card">
-    <h2 style="margin:0 0 10px">🅿️ 주차 정보</h2>
-    <div id="parkingInfo"></div>
-  </div>
+<section>
+  <h2>⚠️ 주의사항</h2>
+  <div id="notice"></div>
+</section>
 
-  <div class="card">
-    <h2 style="margin:0 0 10px">📝 공통 안내</h2>
-    <div id="commonNotes"></div>
-  </div>
+<section>
+  <h2>📅 모임일정</h2>
+  <div id="events"></div>
+</section>
 
 <script>
-  const $ = (id) => document.getElementById(id);
+async function loadData() {
+  try {
+    const configRes = await fetch("./data/siteConfig.json");
+    const config = await configRes.json();
 
-  function todayYMD() {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth()+1).padStart(2,'0');
-    const dd = String(now.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
+    const eventsRes = await fetch("./data/events.json");
+    const events = await eventsRes.json();
 
-  function sortEvents(events) {
-    return events.slice().sort((a,b) => a.date.localeCompare(b.date));
-  }
+    document.getElementById("title").innerText = config.title;
 
-  function findNextEvent(events) {
-    const t = todayYMD();
-    return sortEvents(events).find(e => e.date >= t) || sortEvents(events)[0] || null;
-  }
-
-  function renderSelected(event) {
-    if (!event) {
-      $("selectedEvent").innerHTML = `<div class="muted">선택한 날짜에 일정이 없습니다.</div>`;
-      return;
-    }
-    const memo = event.memo ? `<div class="muted" style="margin-top:6px">메모: ${event.memo}</div>` : "";
-    $("selectedEvent").innerHTML = `
-      <div><strong>${event.date}</strong></div>
-      <div>시간: ${event.startTime} ~ ${event.endTime}</div>
-      ${memo}
+    document.getElementById("location").innerHTML = `
+      <div class="card">
+        <strong>${config.locationName}</strong><br/>
+        ${config.address}
+      </div>
     `;
-  }
 
-  function renderList(events) {
-    const list = $("eventList");
-    list.innerHTML = "";
-    sortEvents(events).forEach(e => {
-      const li = document.createElement("li");
-      li.innerHTML = `<div><strong>${e.date}</strong> <span class="muted">(${e.startTime}~${e.endTime})</span></div>` + (e.memo ? `<div class="muted">${e.memo}</div>` : "");
-      li.style.cursor = "pointer";
-      li.onclick = () => {
-        $("datePicker").value = e.date;
-        renderSelected(e);
-      };
-      list.appendChild(li);
-    });
-  }
-
-  async function main() {
-    const [cfgRes, evRes] = await Promise.all([
-      fetch("./data/siteConfig.json", { cache: "no-store" }),
-      fetch("./data/events.json", { cache: "no-store" })
-    ]);
-    const cfg = await cfgRes.json();
-    const events = await evRes.json();
-
-    $("title").textContent = cfg.title || "모임 일정 안내";
-    $("place").innerHTML = `
-      <div><strong>${cfg.locationName || ""}</strong></div>
-      <div class="muted">${cfg.address || ""}</div>
+    document.getElementById("entry").innerHTML = `
+      <div class="card">
+        ${config.entryGuide}
+      </div>
     `;
-    $("mapLink").href = cfg.mapLink || "#";
-    $("entryGuide").textContent = cfg.entryGuide || "";
-    $("parkingInfo").textContent = cfg.parkingInfo || "";
-    $("commonNotes").textContent = cfg.commonNotes || "";
 
-    renderList(events);
+    document.getElementById("parking").innerHTML = `
+      <div class="card">
+        ${config.parkingInfo}
+      </div>
+    `;
 
-    const next = findNextEvent(events);
-    if (next) {
-      $("datePicker").value = next.date;
-      $("nextHint").textContent = `기본 선택: 가장 가까운 일정 (${next.date})`;
-      renderSelected(next);
-    } else {
-      $("nextHint").textContent = "등록된 일정이 없습니다.";
-      renderSelected(null);
-    }
+    document.getElementById("notice").innerHTML = `
+      <div class="card">
+        ${config.commonNotes}
+      </div>
+    `;
 
-    $("datePicker").addEventListener("change", (e) => {
-      const d = e.target.value;
-      const found = events.find(x => x.date === d);
-      renderSelected(found || null);
+    let eventsHtml = "";
+    events.forEach(e => {
+      eventsHtml += `
+        <div class="card">
+          ${e.date} <br/>
+          ${e.startTime} ~ ${e.endTime} <br/>
+          ${e.memo}
+        </div>
+      `;
     });
-  }
 
-  main().catch(err => {
-    document.body.innerHTML = "<p>데이터를 불러오지 못했습니다. data 폴더/파일 경로를 확인해주세요.</p>";
-    console.error(err);
-  });
+    document.getElementById("events").innerHTML = eventsHtml;
+
+  } catch (err) {
+    document.body.innerHTML = "데이터를 불러오지 못했습니다. data 폴더/파일 경로를 확인해주세요.";
+  }
+}
+
+loadData();
 </script>
+
 </body>
 </html>
